@@ -104,7 +104,6 @@ app.post("/", async (req, res) => {
     console.log(req.body);
     const { username, password } = req.body;
     const data = await scrapper(username, password);
-    data[0].semester = "1st semester";
     const doc = await Student.findOneAndUpdate(
       { roll: username },
       { $set: { gradeInfo: data } },
