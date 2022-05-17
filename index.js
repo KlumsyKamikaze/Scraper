@@ -4,6 +4,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const Student = require("./model");
+const nodemailer = require("nodemailer");
+require("dotenv").config();
 
 async function scrapper(username, password) {
   const browser = await puppeteer.launch({
@@ -23,6 +25,7 @@ async function scrapper(username, password) {
   if (!f) {
     throw new Error("The credentials are invalid");
   }
+
   const m = await f.contentFrame();
 
   const table = await m.$("table[border='1'][align='center'] tbody");
@@ -45,10 +48,17 @@ async function scrapper(username, password) {
         }
         if (td2) {
           console.log("td2 found");
-          CGPA = Array.from(row.querySelectorAll("td"))
+          const CGPA = Array.from(row.querySelectorAll("td"))
             .find((entries) => entries.textContent.includes("CGPA"))
             .textContent.split(":")[1];
-          prevData[currentSem].CGPA = CGPA;
+          const ungradedCourses = prevData[currentSem].courses.filter(
+            ({ grade }) => grade === " "
+          ).length;
+          prevData[currentSem] = {
+            ...prevData[currentSem],
+            CGPA,
+            ungradedCourses,
+          };
           console.log(CGPA);
           currentSem++;
           return { prevData, currentSem };
@@ -85,6 +95,57 @@ const connectToMongoDB = () => {
     );
     process.exit();
   });
+};
+const tableConstructor = (updatedCourses) => {
+  let message =
+    '<table style="border: 1px solid #333;">' +
+    "<thead>" +
+    "<th> Course Name </th>" +
+    "<th> Grade</th>" +
+    "</thead>";
+
+  return updatedCourses.reduce((prevValue, currentValue) => {
+    return (message +=
+      "<tr>" +
+      "<td>" +
+      currentValue.name +
+      "</td>" +
+      "<td>" +
+      currentValue.grade +
+      "</td>" +
+      "</tr>");
+  }, message);
+};
+const sendEmail = async (message) => {
+  // const { from, recipients, subject, message } = mailObj;
+
+  try {
+    // Create a transporter
+    let transporter = nodemailer.createTransport({
+      host: "smtp-relay.sendinblue.com",
+      port: 587,
+      auth: {
+        user: "ishaan@spysoft.com",
+        pass: process.env.SMTP_KEY,
+      },
+    });
+
+    // send mail with defined transport object
+    let mailStatus = await transporter.sendMail({
+      from: "ishaan@spysoft.com", // sender address
+      to: ["ishaan@spysoft.com"], // list of recipients
+      subject: "Grades Declared", // Subject line
+      html: message,
+    });
+
+    console.log(`Message sent: ${mailStatus.messageId}`);
+    return `Message sent: ${mailStatus.messageId}`;
+  } catch (error) {
+    console.error(error);
+    throw new Error(
+      `Something went wrong in the sendmail method. Error: ${error.message}`
+    );
+  }
 };
 
 const app = express();
@@ -124,3 +185,242 @@ app.post("/", async (req, res) => {
     return res.status(500).send("An error occured");
   }
 });
+
+// let previouslyFetchedData = [
+//   {
+//     semester: "First Semester",
+//     courses: [
+//       {
+//         code: "GN1101",
+//         name: "Life Skills 1",
+//         credits: "0",
+//         grade: " ",
+//       },
+//       {
+//         code: "ID1200 ",
+//         name: "Ecology and Environment",
+//         credits: "0",
+//         grade: "P",
+//       },
+//       {
+//         code: "MA1101",
+//         name: "Functions of Several Variables",
+//         credits: "10",
+//         grade: "C",
+//       },
+//       {
+//         code: "PH1010",
+//         name: "Physics I",
+//         credits: "10",
+//         grade: "A",
+//       },
+//     ],
+//     CGPA: "8",
+//   },
+//   {
+//     semester: "Second Semester",
+//     courses: [
+//       {
+//         code: "BT1000",
+//         name: "Introduction to Biological Sciences & Engineering",
+//         credits: "9",
+//         grade: "A",
+//       },
+//       {
+//         code: "BT1020",
+//         name: "Material and Energy Balances",
+//         credits: "11",
+//         grade: "A",
+//       },
+//       {
+//         code: "CH1010",
+//         name: "Introduction to Chemical Engineering",
+//         credits: "12",
+//         grade: "S",
+//       },
+//       {
+//         code: "CY1001 ",
+//         name: "Chemistry: Structure, Bonding & Reactivity",
+//         credits: "10",
+//         grade: "B",
+//       },
+//       {
+//         code: "CY1051",
+//         name: "Chemistry II",
+//         credits: "9",
+//         grade: "B",
+//       },
+//       {
+//         code: "EE1101#",
+//         name: "Signals and Systems",
+//         credits: "10",
+//         grade: "B",
+//       },
+//       {
+//         code: "GN1102",
+//         name: "Life Skills 2",
+//         credits: "0",
+//         grade: "P",
+//       },
+//       {
+//         code: "MA1102",
+//         name: "Series and Matrices",
+//         credits: "10",
+//         grade: "C",
+//       },
+//       {
+//         code: "PH1020",
+//         name: "Physics II",
+//         credits: "10",
+//         grade: "A",
+//       },
+//     ],
+//     CGPA: "8.44",
+//   },
+//   {
+//     semester: "Summer",
+//     courses: [
+//       {
+//         code: "PH1030 ",
+//         name: "Physics Laboratory I",
+//         credits: "4",
+//         grade: "A",
+//       },
+//     ],
+//     CGPA: "8.46",
+//   },
+//   {
+//     semester: "Third Semester",
+//     courses: [
+//       {
+//         code: "AM1100 ",
+//         name: "Engineering Mechanics",
+//         credits: "10",
+//         grade: "S",
+//       },
+//       {
+//         code: "BT2010 ",
+//         name: "Microbiology",
+//         credits: "9",
+//         grade: "A",
+//       },
+//       {
+//         code: "BT2030",
+//         name: "Biochemistry",
+//         credits: "12",
+//         grade: "B",
+//       },
+//       {
+//         code: "HS3420 ",
+//         name: "China in Contemporary Global Politics",
+//         credits: "9",
+//         grade: "A",
+//       },
+//       {
+//         code: "ID5200",
+//         name: "Introduction of Biomimicry",
+//         credits: "9",
+//         grade: "S",
+//       },
+//       {
+//         code: "MA2040",
+//         name: "Probability, Statistics and Stochastic Process",
+//         credits: "9",
+//         grade: " ",
+//       },
+//     ],
+//     CGPA: "8.64",
+//   },
+//   {
+//     semester: "Fourth Semester",
+//     courses: [
+//       {
+//         code: "BT2020",
+//         name: "Numerical methods for biology",
+//         credits: "11",
+//         grade: " ",
+//       },
+//       {
+//         code: "BT2022",
+//         name: "Biostatistics",
+//         credits: "10",
+//         grade: " ",
+//       },
+//       {
+//         code: "BT2041",
+//         name: "Biological Rate Processes",
+//         credits: "11",
+//         grade: " ",
+//       },
+//       {
+//         code: "BT2061",
+//         name: "Biochemical Thermodynamics",
+//         credits: "11",
+//         grade: " ",
+//       },
+//       {
+//         code: "BT2111",
+//         name: "Microbiology and Biochemistry Lab",
+//         credits: "8",
+//         grade: " ",
+//       },
+//       {
+//         code: "CY1002",
+//         name: "Chemistry Lab I ",
+//         credits: "3",
+//         grade: "B",
+//       },
+//       {
+//         code: "HS3002B",
+//         name: "Principles of Economics",
+//         credits: "9",
+//         grade: " ",
+//       },
+//       {
+//         code: "ME1480",
+//         name: "Engineering Drawing",
+//         credits: "7",
+//         grade: " ",
+//       },
+//     ],
+//     CGPA: "8.63",
+//   },
+// ];
+
+let previouslyFetchedData = [];
+
+setInterval(async () => {
+  try {
+    const freshFetchedData = await scrapper(
+      process.env.USER_NAME,
+      process.env.PASSWORD
+    );
+
+    const updatedCourses = freshFetchedData
+      .map((semester, semesterIndex) => {
+        return semester.courses.filter((course, courseIndex) => {
+          return (
+            course.grade !== " " &&
+            previouslyFetchedData[semesterIndex].courses[courseIndex].grade ===
+              " "
+          );
+        });
+      })
+      .filter((semester) => semester.length !== 0)
+      .reduce((prevValue, currentValue) => {
+        return [...prevValue, ...currentValue];
+      }, []);
+    if (updatedCourses.length > 0) {
+      sendEmail(tableConstructor(updatedCourses));
+    }
+    previouslyFetchedData = freshFetchedData;
+  } catch (error) {
+    if (
+      error.message ===
+      "Execution context was destroyed, most likely because of a navigation."
+    )
+      console.log(
+        "Execution context was destroyed, most likely because of a navigation."
+      );
+  }
+}, 1800000);
