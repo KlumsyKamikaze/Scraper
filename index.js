@@ -80,11 +80,16 @@ async function scrapper(username, password) {
   return sanitizedRows;
 }
 const connectToMongoDB = () => {
-  mongoose.connect("mongodb://localhost:27017/scraper", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    autoCreate: true,
-  });
+  mongoose.connect(
+    process.env.NODE_ENV === "production"
+      ? "mongodb+srv://Ishaan:Mouse123@cluster0.o0tfn.mongodb.net/test"
+      : "mongodb://localhost:27017/scraper",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      autoCreate: true,
+    }
+  );
   mongoose.connection.once("open", () => {
     console.log("MongoDB database connection established successfully");
   });
