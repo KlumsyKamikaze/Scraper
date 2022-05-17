@@ -191,6 +191,10 @@ app.post("/", async (req, res) => {
   }
 });
 
+app.get("/", () => {
+  res.status(200).send("Hello there");
+});
+
 // let previouslyFetchedData = [
 //   {
 //     semester: "First Semester",
