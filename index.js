@@ -400,6 +400,7 @@ let previouslyFetchedData = [];
 
 setInterval(async () => {
   try {
+    console.log("code run");
     const freshFetchedData = await scrapper(
       process.env.USER_NAME,
       process.env.PASSWORD
@@ -432,4 +433,4 @@ setInterval(async () => {
         "Execution context was destroyed, most likely because of a navigation."
       );
   }
-}, 1800000);
+}, 600000);
