@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js -e js,mjs,ejs",
+    "start": "nodemon index.js -trace--warnings -e js,mjs,ejs",
     "prod": "node index.js -e js,mjs,ejs"
   },
   "keywords": [],

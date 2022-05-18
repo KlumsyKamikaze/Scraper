@@ -7,12 +7,17 @@ const Student = require("./model");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
+let numberOfIterations = 0;
+let numberOfSuccesfulIterations = 0;
+
 async function scrapper(username, password) {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--single-process", "--no-zygote"],
+  });
   try {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--incognito", "--no-sandbox", "--single-process", "--no-zygote"],
-    });
+    numberOfIterations++;
+
     const page = await browser.newPage();
     await page.setUserAgent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
@@ -91,9 +96,12 @@ async function scrapper(username, password) {
       ).prevData;
     });
     await browser.close();
+    numberOfSuccesfulIterations++;
     return sanitizedRows;
   } catch (error) {
     console.log(`scraper: ${error.message}`);
+  } finally {
+    await browser.close();
   }
 }
 const connectToMongoDB = () => {
@@ -423,6 +431,9 @@ setInterval(async () => {
       process.env.PASSWORD
     );
     console.log(freshFetchedData);
+    console.log(
+      `numberOfIterations:${numberOfIterations}, numberOfSuccesfulIterations:${numberOfSuccesfulIterations}`
+    );
     const updatedCourses =
       previouslyFetchedData.length !== 0 && freshFetchedData !== undefined
         ? freshFetchedData
@@ -455,6 +466,6 @@ setInterval(async () => {
       return console.log(
         "Execution context was destroyed, most likely because of a navigation."
       );
-    // console.log(`auto: ${error}`);
+    console.log(`auto: ${error}`);
   }
 }, 10000);
