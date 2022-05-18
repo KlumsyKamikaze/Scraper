@@ -18,18 +18,27 @@ async function scrapper(username, password) {
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
     );
     await page.goto("https://www.iitm.ac.in/viewgrades/");
+
+    console.log("reached here 1");
+
     await page.type('input[name="rollno"]', username);
     await page.type('input[name="pwd"]', password);
     await page.click('input[name="submit"]');
-    page.on("console", (log) => console[log._type](log._text));
+
+    console.log("reached here 2");
+
+    // page.on("console", (log) => console[log._type](log._text));
     const f = await page.$('frame[src="studopts2.php"]');
     if (!f) {
       throw new Error("The credentials are invalid");
     }
     const m = await f.contentFrame();
 
+    console.log("reached here 3");
+
     const table = await m.$("table[border='1'][align='center'] tbody");
-    console.log("reached here 1");
+
+    console.log("reached here 4");
 
     const sanitizedRows = await table.evaluate((tempTable) => {
       const rows = Array.from(tempTable.childNodes);
@@ -80,7 +89,7 @@ async function scrapper(username, password) {
     // await browser.close();
     return sanitizedRows;
   } catch (error) {
-    console.log(`scraper: ${error}`);
+    console.log(`scraper: ${error.message}`);
   }
 }
 const connectToMongoDB = () => {
@@ -411,7 +420,7 @@ setInterval(async () => {
     );
     console.log(freshFetchedData);
     const updatedCourses =
-      previouslyFetchedData.length !== 0 && freshFetchedData
+      previouslyFetchedData.length !== 0 && freshFetchedData !== undefined
         ? freshFetchedData
             .map((semester, semesterIndex) => {
               return semester.courses.filter((course, courseIndex) => {
@@ -430,7 +439,7 @@ setInterval(async () => {
     if (updatedCourses.length > 0) {
       sendEmail(tableConstructor(updatedCourses));
     }
-    previouslyFetchedData = freshFetchedData;
+    previouslyFetchedData = [...freshFetchedData];
   } catch (error) {
     if (
       error.message ===
@@ -441,4 +450,4 @@ setInterval(async () => {
       );
     console.log(`auto: ${error}`);
   }
-}, 10000);
+}, 20000);
