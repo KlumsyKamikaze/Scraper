@@ -24,6 +24,7 @@ async function scrapper(username, password) {
     await page.type('input[name="rollno"]', username);
     await page.type('input[name="pwd"]', password);
     await page.click('input[name="submit"]');
+    await page.waitForNavigation();
 
     console.log("reached here 2");
 
