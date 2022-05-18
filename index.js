@@ -83,7 +83,7 @@ async function scrapper(username, password) {
 const connectToMongoDB = () => {
   mongoose.connect(
     process.env.NODE_ENV === "production"
-      ? "mongodb+srv://Ishaan:Mouse123@cluster0.o0tfn.mongodb.net/test"
+      ? process.env.MONGO_DB_URI
       : "mongodb://localhost:27017/scraper",
     {
       useNewUrlParser: true,
@@ -438,4 +438,4 @@ setInterval(async () => {
       );
     console.log(error);
   }
-}, 10000);
+}, 60000);
