@@ -431,7 +431,8 @@ setInterval(async () => {
       process.env.USER_NAME,
       process.env.PASSWORD
     );
-    console.log(freshFetchedData);
+    console.log(freshFetchedData.length);
+    console.log(previouslyFetchedData.length);
     console.log(
       `numberOfIterations:${numberOfIterations}, numberOfSuccesfulIterations:${numberOfSuccesfulIterations}`
     );
