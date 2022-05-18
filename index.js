@@ -90,7 +90,7 @@ async function scrapper(username, password) {
         { prevData: [], currentSem: 0 }
       ).prevData;
     });
-    // await browser.close();
+    await browser.close();
     return sanitizedRows;
   } catch (error) {
     console.log(`scraper: ${error.message}`);
