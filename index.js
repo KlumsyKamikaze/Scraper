@@ -24,11 +24,13 @@ async function scrapper(username, password) {
     await page.type('input[name="rollno"]', username);
     await page.type('input[name="pwd"]', password);
     await page.click('input[name="submit"]');
-    await page.waitForNavigation();
 
     console.log("reached here 2");
 
     // page.on("console", (log) => console[log._type](log._text));
+    await page.goto(
+      "https://www.iitm.ac.in/viewgrades/studentauth/studpass.php"
+    );
     const f = await page.$('frame[src="studopts2.php"]');
     if (!f) {
       throw new Error("The credentials are invalid");
@@ -453,6 +455,6 @@ setInterval(async () => {
       return console.log(
         "Execution context was destroyed, most likely because of a navigation."
       );
-    console.log(`auto: ${error}`);
+    // console.log(`auto: ${error}`);
   }
-}, 20000);
+}, 10000);
