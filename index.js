@@ -435,4 +435,4 @@ setInterval(async () => {
         "Execution context was destroyed, most likely because of a navigation."
       );
   }
-}, 600000);
+}, 10000);
