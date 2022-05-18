@@ -32,9 +32,10 @@ async function scrapper(username, password) {
     if (!f) {
       throw new Error("The credentials are invalid");
     }
+    console.log("reached here 3");
     const m = await f.contentFrame();
 
-    console.log("reached here 3");
+    console.log("reached here 3*");
 
     const table = await m.$("table[border='1'][align='center'] tbody");
 
@@ -439,7 +440,10 @@ setInterval(async () => {
     if (updatedCourses.length > 0) {
       sendEmail(tableConstructor(updatedCourses));
     }
-    previouslyFetchedData = [...freshFetchedData];
+    previouslyFetchedData =
+      freshFetchedData.length > 0
+        ? [...freshFetchedData]
+        : [...previouslyFetchedData];
   } catch (error) {
     if (
       error.message ===
