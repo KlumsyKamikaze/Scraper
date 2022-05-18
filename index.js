@@ -406,33 +406,36 @@ setInterval(async () => {
       process.env.USER_NAME,
       process.env.PASSWORD
     );
-
-    const updatedCourses = freshFetchedData
-      .map((semester, semesterIndex) => {
-        return semester.courses.filter((course, courseIndex) => {
-          return (
-            course.grade !== " " &&
-            previouslyFetchedData[semesterIndex].courses[courseIndex].grade ===
-              " "
-          );
-        });
-      })
-      .filter((semester) => semester.length !== 0)
-      .reduce((prevValue, currentValue) => {
-        return [...prevValue, ...currentValue];
-      }, []);
+    // console.log(freshFetchedData);
+    const updatedCourses =
+      previouslyFetchedData.length !== 0
+        ? freshFetchedData
+            .map((semester, semesterIndex) => {
+              return semester.courses.filter((course, courseIndex) => {
+                return (
+                  course.grade !== " " &&
+                  previouslyFetchedData[semesterIndex].courses[courseIndex]
+                    .grade === " "
+                );
+              });
+            })
+            .filter((semester) => semester.length !== 0)
+            .reduce((prevValue, currentValue) => {
+              return [...prevValue, ...currentValue];
+            }, [])
+        : [];
     if (updatedCourses.length > 0) {
       sendEmail(tableConstructor(updatedCourses));
     }
-    console.log(`freshFetchedData: ${freshFetchedData}`);
     previouslyFetchedData = freshFetchedData;
   } catch (error) {
     if (
       error.message ===
       "Execution context was destroyed, most likely because of a navigation."
     )
-      console.log(
+      return console.log(
         "Execution context was destroyed, most likely because of a navigation."
       );
+    console.log(error);
   }
 }, 10000);
