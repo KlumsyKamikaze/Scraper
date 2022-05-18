@@ -33,9 +33,10 @@ async function scrapper(username, password) {
     console.log("reached here 2");
 
     // page.on("console", (log) => console[log._type](log._text));
-    await page.goto(
-      "https://www.iitm.ac.in/viewgrades/studentauth/studpass.php"
-    );
+    // await page.goto(
+    //   "https://www.iitm.ac.in/viewgrades/studentauth/studpass.php"
+    // );
+    await page.waitForSelector('frame[src="studopts2.php"]');
     const f = await page.$('frame[src="studopts2.php"]');
     if (!f) {
       throw new Error("The credentials are invalid");
@@ -451,6 +452,7 @@ setInterval(async () => {
               return [...prevValue, ...currentValue];
             }, [])
         : [];
+    console.log(updatedCourses);
     if (updatedCourses.length > 0) {
       sendEmail(tableConstructor(updatedCourses));
     }
@@ -468,4 +470,4 @@ setInterval(async () => {
       );
     console.log(`auto: ${error}`);
   }
-}, 10000);
+}, 5000);
