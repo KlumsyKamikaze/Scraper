@@ -168,7 +168,7 @@ app.listen(process.env.PORT || 5200, () => console.log("Server ready"));
 
 app.post("/", async (req, res) => {
   try {
-    console.log(req.body);
+    console.log(`body:${req.body}`);
     const { username, password } = req.body;
     const data = await scrapper(username, password);
     const doc = await Student.findOneAndUpdate(
@@ -424,6 +424,7 @@ setInterval(async () => {
     if (updatedCourses.length > 0) {
       sendEmail(tableConstructor(updatedCourses));
     }
+    console.log(`freshFetchedData: ${freshFetchedData}`);
     previouslyFetchedData = freshFetchedData;
   } catch (error) {
     if (
