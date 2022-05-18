@@ -8,76 +8,80 @@ const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 async function scrapper(username, password) {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--incognito", "--no-sandbox", "--single-process", "--no-zygote"],
-  });
-  const page = await browser.newPage();
-  await page.setUserAgent(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
-  );
-  await page.goto("https://www.iitm.ac.in/viewgrades/");
-  await page.type('input[name="rollno"]', username);
-  await page.type('input[name="pwd"]', password);
-  await page.click('input[name="submit"]');
-  page.on("console", (log) => console[log._type](log._text));
-  const f = await page.$('frame[src="studopts2.php"]');
-  if (!f) {
-    throw new Error("The credentials are invalid");
+  try {
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--incognito", "--no-sandbox", "--single-process", "--no-zygote"],
+    });
+    const page = await browser.newPage();
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
+    );
+    await page.goto("https://www.iitm.ac.in/viewgrades/");
+    await page.type('input[name="rollno"]', username);
+    await page.type('input[name="pwd"]', password);
+    await page.click('input[name="submit"]');
+    page.on("console", (log) => console[log._type](log._text));
+    const f = await page.$('frame[src="studopts2.php"]');
+    if (!f) {
+      throw new Error("The credentials are invalid");
+    }
+    const m = await f.contentFrame();
+
+    const table = await m.$("table[border='1'][align='center'] tbody");
+    console.log("reached here 1");
+
+    const sanitizedRows = await table.evaluate((tempTable) => {
+      const rows = Array.from(tempTable.childNodes);
+      return rows.reduce(
+        ({ prevData, currentSem }, row) => {
+          const th = row.querySelector("th");
+          const td8 = row.querySelector("td[colspan='8']");
+          const td2 = row.querySelector("td[colspan='2']");
+          if (th) {
+            console.log("Invalid element found");
+            return { prevData, currentSem };
+          }
+          if (td8) {
+            const semester = row.textContent.split("(")[0].trim();
+            prevData.push({ semester, courses: [] });
+            return { prevData, currentSem };
+          }
+          if (td2) {
+            console.log("td2 found");
+            const CGPA = Array.from(row.querySelectorAll("td"))
+              .find((entries) => entries.textContent.includes("CGPA"))
+              .textContent.split(":")[1];
+            const ungradedCourses = prevData[currentSem].courses.filter(
+              ({ grade }) => grade === " "
+            ).length;
+            prevData[currentSem] = {
+              ...prevData[currentSem],
+              CGPA,
+              ungradedCourses,
+            };
+            console.log(CGPA);
+            currentSem++;
+            return { prevData, currentSem };
+          }
+          const entries = Array.from(row.querySelectorAll("td"));
+          // console.log("entries:" + entries);
+          prevData[currentSem].courses.push({
+            code: entries[1].textContent,
+            name: entries[2].textContent,
+            credits: entries[4].textContent,
+            grade: entries[5].textContent || "-",
+          });
+          return { prevData, currentSem };
+        },
+        { prevData: [], currentSem: 0 }
+      ).prevData;
+    });
+    // await browser.close();
+    return sanitizedRows;
+  } catch (error) {
+    console.log(`scraper: ${error}`);
   }
-  const m = await f.contentFrame();
-
-  const table = await m.$("table[border='1'][align='center'] tbody");
-  console.log("reached here 1");
-
-  const sanitizedRows = await table.evaluate((tempTable) => {
-    const rows = Array.from(tempTable.childNodes);
-    return rows.reduce(
-      ({ prevData, currentSem }, row) => {
-        const th = row.querySelector("th");
-        const td8 = row.querySelector("td[colspan='8']");
-        const td2 = row.querySelector("td[colspan='2']");
-        if (th) {
-          console.log("Invalid element found");
-          return { prevData, currentSem };
-        }
-        if (td8) {
-          const semester = row.textContent.split("(")[0].trim();
-          prevData.push({ semester, courses: [] });
-          return { prevData, currentSem };
-        }
-        if (td2) {
-          console.log("td2 found");
-          const CGPA = Array.from(row.querySelectorAll("td"))
-            .find((entries) => entries.textContent.includes("CGPA"))
-            .textContent.split(":")[1];
-          const ungradedCourses = prevData[currentSem].courses.filter(
-            ({ grade }) => grade === " "
-          ).length;
-          prevData[currentSem] = {
-            ...prevData[currentSem],
-            CGPA,
-            ungradedCourses,
-          };
-          console.log(CGPA);
-          currentSem++;
-          return { prevData, currentSem };
-        }
-        const entries = Array.from(row.querySelectorAll("td"));
-        // console.log("entries:" + entries);
-        prevData[currentSem].courses.push({
-          code: entries[1].textContent,
-          name: entries[2].textContent,
-          credits: entries[4].textContent,
-          grade: entries[5].textContent || "-",
-        });
-        return { prevData, currentSem };
-      },
-      { prevData: [], currentSem: 0 }
-    ).prevData;
-  });
-  // await browser.close();
-  return sanitizedRows;
 }
 const connectToMongoDB = () => {
   mongoose.connect(
@@ -435,6 +439,6 @@ setInterval(async () => {
       return console.log(
         "Execution context was destroyed, most likely because of a navigation."
       );
-    console.log(error);
+    console.log(`auto: ${error}`);
   }
 }, 10000);
