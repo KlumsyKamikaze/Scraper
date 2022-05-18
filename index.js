@@ -411,7 +411,7 @@ setInterval(async () => {
     );
     console.log(freshFetchedData);
     const updatedCourses =
-      previouslyFetchedData.length !== 0
+      previouslyFetchedData.length !== 0 && freshFetchedData
         ? freshFetchedData
             .map((semester, semesterIndex) => {
               return semester.courses.filter((course, courseIndex) => {
