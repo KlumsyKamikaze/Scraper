@@ -406,7 +406,7 @@ setInterval(async () => {
       process.env.USER_NAME,
       process.env.PASSWORD
     );
-    // console.log(freshFetchedData);
+    console.log(freshFetchedData);
     const updatedCourses =
       previouslyFetchedData.length !== 0
         ? freshFetchedData
