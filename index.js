@@ -12,7 +12,7 @@ async function scrapper(username, password) {
     headless: true,
     args: ["--no-sandbox"],
   });
-
+  console.log(browser);
   const page = await browser.newPage();
   await page.setUserAgent(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
@@ -26,10 +26,11 @@ async function scrapper(username, password) {
   if (!f) {
     throw new Error("The credentials are invalid");
   }
-
+  console.log(f);
   const m = await f.contentFrame();
 
   const table = await m.$("table[border='1'][align='center'] tbody");
+  console.log("reached here 1");
 
   const sanitizedRows = await table.evaluate((tempTable) => {
     const rows = Array.from(tempTable.childNodes);
@@ -77,7 +78,7 @@ async function scrapper(username, password) {
       { prevData: [], currentSem: 0 }
     ).prevData;
   });
-  await browser.close();
+  // await browser.close();
   return sanitizedRows;
 }
 const connectToMongoDB = () => {
@@ -438,4 +439,4 @@ setInterval(async () => {
       );
     console.log(error);
   }
-}, 60000);
+}, 10000);
