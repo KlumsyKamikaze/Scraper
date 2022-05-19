@@ -37,6 +37,7 @@ async function scrapper(username, password) {
     //   "https://www.iitm.ac.in/viewgrades/studentauth/studpass.php"
     // );
     await page.waitForSelector('frame[src="studopts2.php"]');
+    await page.waitForTimeout(1000);
     const f = await page.$('frame[src="studopts2.php"]');
     if (!f) {
       throw new Error("The credentials are invalid");
