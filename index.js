@@ -431,7 +431,7 @@ setInterval(async () => {
       process.env.USER_NAME,
       process.env.PASSWORD
     );
-    console.log(freshFetchedData.length);
+    console.log(freshFetchedData);
     console.log(previouslyFetchedData.length);
     console.log(
       `numberOfIterations:${numberOfIterations}, numberOfSuccesfulIterations:${numberOfSuccesfulIterations}`
@@ -458,7 +458,8 @@ setInterval(async () => {
       sendEmail(tableConstructor(updatedCourses));
     }
     previouslyFetchedData =
-      freshFetchedData.length > 0
+      freshFetchedData.length > 0 &&
+      freshFetchedData.length >= previouslyFetchedData
         ? [...freshFetchedData]
         : [...previouslyFetchedData];
   } catch (error) {
