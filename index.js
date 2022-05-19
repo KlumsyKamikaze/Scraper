@@ -49,7 +49,6 @@ async function scrapper(username, password) {
     const table = await m.$("table[border='1'][align='center'] tbody");
 
     console.log("reached here 4");
-
     const sanitizedRows = await table.evaluate((tempTable) => {
       const rows = Array.from(tempTable.childNodes);
       return rows.reduce(
@@ -57,6 +56,7 @@ async function scrapper(username, password) {
           const th = row.querySelector("th");
           const td8 = row.querySelector("td[colspan='8']");
           const td2 = row.querySelector("td[colspan='2']");
+          // console.log(th, td8, td2);
           if (th) {
             console.log("Invalid element found");
             return { prevData, currentSem };
@@ -472,4 +472,4 @@ setInterval(async () => {
       );
     console.log(`auto: ${error}`);
   }
-}, 5000);
+}, 20000);
