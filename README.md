@@ -13,3 +13,5 @@ and the data was also supposed to be stored in a database
 - Puppeteer
 - Mongoose
 - MongoDB
+
+Make a .env file that will look something like this: ![image](https://user-images.githubusercontent.com/63498627/169449765-98eda34b-b6ba-48e7-8ab6-89bf357686dd.png)
