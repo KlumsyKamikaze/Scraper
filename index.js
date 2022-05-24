@@ -161,14 +161,20 @@ const sendEmail = async (message) => {
         pass: process.env.SMTP_KEY,
       },
     });
-
+    let mailStatus = {};
     // send mail with defined transport object
-    let mailStatus = await transporter.sendMail({
-      from: "ishaan@spysoft.com", // sender address
-      to: ["ishaan@spysoft.com"], // list of recipients
-      subject: "Grades Declared", // Subject line
-      html: message,
-    });
+    if (process.env.NODE_ENV === "production") {
+      mailStatus = await transporter.sendMail({
+        from: "ishaan@spysoft.com", // sender address
+        to: ["ishaan@spysoft.com"], // list of recipients
+        subject: "Grades Declared", // Subject line
+        html: message,
+      });
+    } else {
+      mailStatus = {
+        messageId: "testing",
+      };
+    }
 
     console.log(`Message sent: ${mailStatus.messageId}`);
     return `Message sent: ${mailStatus.messageId}`;
@@ -230,7 +236,7 @@ app.get("/", async (req, res) => {
 //         code: "GN1101",
 //         name: "Life Skills 1",
 //         credits: "0",
-//         grade: " ",
+//         grade: "P",
 //       },
 //       {
 //         code: "ID1200 ",
@@ -362,7 +368,7 @@ app.get("/", async (req, res) => {
 //         code: "MA2040",
 //         name: "Probability, Statistics and Stochastic Process",
 //         credits: "9",
-//         grade: " ",
+//         grade: "B",
 //       },
 //     ],
 //     CGPA: "8.64",
@@ -458,9 +464,10 @@ setInterval(async () => {
     if (updatedCourses.length > 0) {
       sendEmail(tableConstructor(updatedCourses));
     }
+    console.log("reached here");
     previouslyFetchedData =
       freshFetchedData.length > 0 &&
-      freshFetchedData.length >= previouslyFetchedData
+      freshFetchedData.length >= previouslyFetchedData.length
         ? [...freshFetchedData]
         : [...previouslyFetchedData];
   } catch (error) {
