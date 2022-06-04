@@ -480,4 +480,4 @@ setInterval(async () => {
       );
     console.log(`auto: ${error}`);
   }
-}, 20000);
+}, 60000);
