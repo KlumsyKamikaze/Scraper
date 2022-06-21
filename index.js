@@ -24,13 +24,13 @@ async function scrapper(username, password) {
     );
     await page.goto("https://www.iitm.ac.in/viewgrades/");
 
-    console.log("reached here 1");
+    // console.log("reached here 1");
 
     await page.type('input[name="rollno"]', username);
     await page.type('input[name="pwd"]', password);
     await page.click('input[name="submit"]');
 
-    console.log("reached here 2");
+    // console.log("reached here 2");
 
     // page.on("console", (log) => console[log._type](log._text));
     // await page.goto(
@@ -42,14 +42,14 @@ async function scrapper(username, password) {
     if (!f) {
       throw new Error("The credentials are invalid");
     }
-    console.log("reached here 3");
+    // console.log("reached here 3");
     const m = await f.contentFrame();
 
-    console.log("reached here 3*");
+    // console.log("reached here 3*");
 
     const table = await m.$("table[border='1'][align='center'] tbody");
 
-    console.log("reached here 4");
+    // console.log("reached here 4");
     const sanitizedRows = await table.evaluate((tempTable) => {
       const rows = Array.from(tempTable.childNodes);
       return rows.reduce(
@@ -101,7 +101,7 @@ async function scrapper(username, password) {
     numberOfSuccesfulIterations++;
     return sanitizedRows;
   } catch (error) {
-    console.log(`scraper: ${error.message}`);
+    console.log(`scraper: ${error}`);
   } finally {
     await browser.close();
   }
@@ -431,15 +431,41 @@ app.get("/", async (req, res) => {
 
 let previouslyFetchedData = [];
 
+let freshFetchedData = [];
+
 setInterval(async () => {
   try {
     console.log("code run");
-    const freshFetchedData = await scrapper(
+    freshFetchedData = await scrapper(
       process.env.USER_NAME,
       process.env.PASSWORD
     );
-    console.log(freshFetchedData);
-    console.log(previouslyFetchedData.length);
+
+    previouslyFetchedDataLogger = previouslyFetchedData.map(
+      ({ semester, courses, CGPA, ungradedCourses }) => {
+        return {
+          semester,
+          noOfCourses: courses.length,
+          noOfCoursesWithGrades: courses.filter(
+            ({ grade }) => grade !== undefined
+          ).length,
+        };
+      }
+    );
+
+    const freshFetchedDataLogger = freshFetchedData.map(
+      ({ semester, courses, CGPA, ungradedCourses }) => {
+        return {
+          semester,
+          noOfCourses: courses.length,
+          noOfCoursesWithGrades: courses.filter(
+            ({ grade }) => grade !== undefined
+          ).length,
+        };
+      }
+    );
+    console.log(freshFetchedDataLogger);
+    console.log(previouslyFetchedDataLogger);
     console.log(
       `numberOfIterations:${numberOfIterations}, numberOfSuccesfulIterations:${numberOfSuccesfulIterations}`
     );
@@ -464,8 +490,9 @@ setInterval(async () => {
     if (updatedCourses.length > 0) {
       sendEmail(tableConstructor(updatedCourses));
     }
-    console.log("reached here");
+    // console.log("reached here");
     previouslyFetchedData =
+      freshFetchedData !== undefined &&
       freshFetchedData.length > 0 &&
       freshFetchedData.length >= previouslyFetchedData.length
         ? [...freshFetchedData]
@@ -478,6 +505,8 @@ setInterval(async () => {
       return console.log(
         "Execution context was destroyed, most likely because of a navigation."
       );
+    console.log(previouslyFetchedData);
+    console.log(freshFetchedData);
     console.log(`auto: ${error}`);
   }
-}, 60000);
+}, 600000);
